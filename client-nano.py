@@ -2,6 +2,20 @@ from qiskit import QuantumCircuit, Aer, transpile, assemble
 from qiskit.visualization import plot_histogram, plot_bloch_multivector
 from numpy.random import randint
 import numpy as np
+import os
+
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit.quantum_info import random_statevector, Statevector
+from qiskit.visualization import plot_bloch_multivector, array_to_latex,plot_histogram
+from qiskit.extensions import Initialize
+from qiskit import Aer,transpile,assemble
+from cryptography.fernet import Fernet
+import base64
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+# import os
+from qiskit.ignis.verification import marginal_counts
 
 
 def key_to_bytes(key):
@@ -292,38 +306,45 @@ def generate_key():
     print("Private key Alice has: ", alice_key)
     print("Private key Bob has: ",bob_key)
 
+    return alice_key
+
 
 
 def create_crypter(password):
+    # print(type(password))
+    passByte=bytes(password, 'utf-8')
   
-  salt=os.urandom(16)
-  kdf=PBKDF2HMAC(algorithm=hashes.SHA256,length=32,salt=salt,iterations=10,backend=default_backend())
-  key=base64.urlsafe_b64encode(kdf.derive(password))
-  crypter=Fernet(key)
-  return crypter
+    salt=os.urandom(16)
+    kdf=PBKDF2HMAC(algorithm=hashes.SHA256,length=32,salt=salt,iterations=10,backend=default_backend())
+    key=base64.urlsafe_b64encode(kdf.derive(passByte))
+    crypter=Fernet(key)
+    return crypter
 
 
 
-import socket
-ClientMultiSocket = socket.socket()
-host = '127.0.0.1'
-port = 2007
-print('Waiting for connection response')
-try:
-    ClientMultiSocket.connect((host, port))
-except socket.error as e:
-    print(str(e))
-res = ClientMultiSocket.recv(1024)
-while True:
-    Input = input('Hey there: ')
-    ClientMultiSocket.send(str.encode(Input))
-    res = ClientMultiSocket.recv(1024)
-    print(res.decode())
-ClientMultiSocket.close()
+# import socket
+# ClientMultiSocket = socket.socket()
+# host = '127.0.0.1'
+# port = 2007
+# print('Waiting for connection response')
+# try:
+#     ClientMultiSocket.connect((host, port))
+# except socket.error as e:
+#     print(str(e))
+# res = ClientMultiSocket.recv(1024)
+# while True:
+#     Input = input('Hey there: ')
+#     ClientMultiSocket.send(str.encode(Input))
+#     res = ClientMultiSocket.recv(1024)
+#     print(res.decode())
+# ClientMultiSocket.close()
 
 
 key=generate_key()
 keyByte=key_to_bytes(key)
 crypter=create_crypter(keyByte)
 enc=crypter.encrypt(b"Hello World")
-print(enc)
+print("encrypted",enc)
+print()
+decrypted=crypter.decrypt(enc)
+print("decrypted",decrypted)
